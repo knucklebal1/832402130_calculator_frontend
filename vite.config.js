@@ -12,7 +12,8 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    open: false,
+    // 启动开发服务器后自动打开浏览器
+    open: true,
     // 开发环境把 /api 代理到后端，前端与后端同源，天然没有跨域问题
     proxy: {
       '/api': {
