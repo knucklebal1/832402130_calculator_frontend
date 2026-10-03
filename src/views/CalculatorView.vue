@@ -3,6 +3,7 @@ import { onMounted, onUnmounted, ref } from 'vue'
 import DisplayPanel from '../components/DisplayPanel.vue'
 import HistoryPanel from '../components/HistoryPanel.vue'
 import Keypad from '../components/Keypad.vue'
+import ScientificPanel from '../components/ScientificPanel.vue'
 import StatsCard from '../components/StatsCard.vue'
 import { calculate, clearHistory, deleteHistory, fetchHistory, fetchStats } from '../api/calculator'
 import { useTheme } from '../composables/useTheme'
@@ -15,6 +16,9 @@ const expression = ref('')
 const result = ref('')
 const errorMessage = ref('')
 const loading = ref(false)
+
+/** 三角函数角度单位：DEG（角度制，默认）或 RAD（弧度制） */
+const angleMode = ref('DEG')
 
 /**
  * 上一次计算是否刚刚完成。
@@ -110,7 +114,7 @@ async function submit() {
   errorMessage.value = ''
 
   try {
-    const data = await calculate(expr)
+    const data = await calculate(expr, angleMode.value)
     result.value = data.result
     // 计算成功后表达式和结果都保留在屏幕上，等用户开始下一次输入时再一起清掉
     justCalculated.value = true
@@ -122,6 +126,11 @@ async function submit() {
   } finally {
     loading.value = false
   }
+}
+
+/** 角度制 / 弧度制切换。 */
+function toggleAngleMode() {
+  angleMode.value = angleMode.value === 'DEG' ? 'RAD' : 'DEG'
 }
 
 async function loadHistory(targetPage = page.value) {
@@ -261,6 +270,13 @@ onUnmounted(() => {
           :result="result"
           :error-message="errorMessage"
           :loading="loading"
+        />
+
+        <ScientificPanel
+          :angle-mode="angleMode"
+          :disabled="loading"
+          @key="handleKey"
+          @toggle-angle="toggleAngleMode"
         />
 
         <Keypad :disabled="loading" @key="handleKey" />
