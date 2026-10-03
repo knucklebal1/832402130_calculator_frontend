@@ -1,0 +1,262 @@
+<script setup>
+import { onMounted, onUnmounted, ref } from 'vue'
+import DisplayPanel from '../components/DisplayPanel.vue'
+import HistoryPanel from '../components/HistoryPanel.vue'
+import Keypad from '../components/Keypad.vue'
+import StatsCard from '../components/StatsCard.vue'
+import { calculate, clearHistory, deleteHistory, fetchHistory, fetchStats } from '../api/calculator'
+import { useTheme } from '../composables/useTheme'
+
+const { theme, toggleTheme } = useTheme()
+
+/* ---------------- 计算区状态 ---------------- */
+
+const expression = ref('')
+const result = ref('')
+const errorMessage = ref('')
+const loading = ref(false)
+
+/* ---------------- 历史区状态 ---------------- */
+
+const history = ref([])
+const total = ref(0)
+const page = ref(1)
+const size = ref(10)
+const keyword = ref('')
+const historyLoading = ref(false)
+const stats = ref(null)
+
+/* ---------------- 表达式输入 ---------------- */
+
+/** 拼接按键内容。前端只做字符串处理，不做任何计算。 */
+function appendToken(token) {
+  expression.value += token
+  result.value = ''
+  errorMessage.value = ''
+}
+
+function backspace() {
+  expression.value = expression.value.slice(0, -1)
+  result.value = ''
+  errorMessage.value = ''
+}
+
+function clearExpression() {
+  expression.value = ''
+  result.value = ''
+  errorMessage.value = ''
+}
+
+/**
+ * 正负号切换（±）：
+ * 把末尾的数字包成 (-n)，再次点击则还原。
+ */
+function toggleSign() {
+  const current = expression.value
+  const wrapped = current.match(/\((-?)(\d+(?:\.\d+)?|\.\d+)\)$/)
+
+  if (wrapped) {
+    expression.value = current.slice(0, current.length - wrapped[0].length) + wrapped[2]
+  } else {
+    const trailing = current.match(/(\d+(?:\.\d+)?|\.\d+)$/)
+    if (trailing) {
+      const index = current.length - trailing[0].length
+      expression.value = `${current.slice(0, index)}(-${trailing[0]})`
+    } else {
+      expression.value = `${current}-`
+    }
+  }
+  result.value = ''
+  errorMessage.value = ''
+}
+
+/* ---------------- 与后端交互 ---------------- */
+
+/** 提交计算：把表达式发给后端，结果完全以后端返回为准。 */
+async function submit() {
+  const expr = expression.value.trim()
+  if (!expr || loading.value) {
+    if (!expr) {
+      errorMessage.value = '请先输入表达式'
+    }
+    return
+  }
+
+  loading.value = true
+  errorMessage.value = ''
+
+  try {
+    const data = await calculate(expr)
+    result.value = data.result
+    expression.value = data.expression
+    // 计算成功后重新从后端拉取历史，保证展示的是数据库的最新状态
+    await Promise.all([loadHistory(1), loadStats()])
+  } catch (error) {
+    result.value = ''
+    errorMessage.value = error.message
+  } finally {
+    loading.value = false
+  }
+}
+
+async function loadHistory(targetPage = page.value) {
+  historyLoading.value = true
+  try {
+    const data = await fetchHistory({ page: targetPage, size: size.value, keyword: keyword.value })
+    history.value = data.list
+    total.value = data.total
+    page.value = data.page
+    errorMessage.value = ''
+  } catch (error) {
+    history.value = []
+    errorMessage.value = error.message
+  } finally {
+    historyLoading.value = false
+  }
+}
+
+async function loadStats() {
+  try {
+    stats.value = await fetchStats()
+  } catch {
+    // 统计属于加分项，失败时不打断主流程
+    stats.value = null
+  }
+}
+
+function handleSearch(value) {
+  keyword.value = value
+  loadHistory(1)
+}
+
+async function handleRemove(item) {
+  try {
+    await deleteHistory(item.id)
+    // 删除后按后端最新状态重新查询；当前页删空时自动回到上一页
+    const lastItemOnPage = history.value.length === 1
+    const targetPage = lastItemOnPage && page.value > 1 ? page.value - 1 : page.value
+    await loadHistory(targetPage)
+    await loadStats()
+  } catch (error) {
+    errorMessage.value = error.message
+  }
+}
+
+async function handleClearAll() {
+  try {
+    await clearHistory()
+    await loadHistory(1)
+    await loadStats()
+  } catch (error) {
+    errorMessage.value = error.message
+  }
+}
+
+/* ---------------- 按键与键盘快捷键 ---------------- */
+
+function handleKey(key) {
+  switch (key) {
+    case 'AC':
+      clearExpression()
+      break
+    case 'BACK':
+      backspace()
+      break
+    case 'SIGN':
+      toggleSign()
+      break
+    case '=':
+      submit()
+      break
+    default:
+      appendToken(key)
+  }
+}
+
+const DIGIT_AND_SYMBOL = /^[0-9+\-*/().]$/
+
+function onKeydown(event) {
+  const tag = event.target?.tagName
+  // 在搜索框里输入时不触发计算器快捷键
+  if (tag === 'INPUT' || tag === 'TEXTAREA') {
+    return
+  }
+
+  const key = event.key
+  if (DIGIT_AND_SYMBOL.test(key)) {
+    appendToken(key)
+    event.preventDefault()
+  } else if (key === 'Enter' || key === '=') {
+    submit()
+    event.preventDefault()
+  } else if (key === 'Backspace') {
+    backspace()
+    event.preventDefault()
+  } else if (key === 'Escape' || key === 'Delete') {
+    clearExpression()
+    event.preventDefault()
+  }
+}
+
+onMounted(() => {
+  loadHistory(1)
+  loadStats()
+  window.addEventListener('keydown', onKeydown)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', onKeydown)
+})
+</script>
+
+<template>
+  <div class="app-shell">
+    <header class="app-header">
+      <div>
+        <h1 class="app-title">前后端分离计算器</h1>
+        <p class="app-subtitle">
+          表达式校验、解析与计算全部由 Spring Boot 后端完成，计算历史持久化在 MySQL
+        </p>
+      </div>
+      <button class="theme-toggle" type="button" @click="toggleTheme">
+        {{ theme === 'light' ? '🌙 深色' : '☀️ 浅色' }}
+      </button>
+    </header>
+
+    <div class="main-grid">
+      <section class="card">
+        <h2 class="card-title">计算</h2>
+
+        <DisplayPanel
+          :expression="expression"
+          :result="result"
+          :error-message="errorMessage"
+          :loading="loading"
+        />
+
+        <Keypad :disabled="loading" @key="handleKey" />
+
+        <p class="keyboard-tip">
+          支持键盘操作：数字与 + − × ÷ ( ) . 直接输入，Enter 计算，Backspace 退格，Esc 清空
+        </p>
+      </section>
+
+      <div class="sidebar-stack">
+        <StatsCard :stats="stats" />
+        <HistoryPanel
+          :items="history"
+          :total="total"
+          :page="page"
+          :size="size"
+          :loading="historyLoading"
+          :keyword="keyword"
+          @search="handleSearch"
+          @change-page="loadHistory"
+          @remove="handleRemove"
+          @clear-all="handleClearAll"
+          @refresh="loadHistory()"
+        />
+      </div>
+    </div>
+  </div>
+</template>
