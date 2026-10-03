@@ -26,7 +26,7 @@ http.interceptors.response.use(
     const message =
       body && typeof body === 'object' && body.message
         ? body.message
-        : '网络异常，请确认后端服务已启动'
+        : '无法连接后端服务，请确认后端已启动'
 
     return Promise.reject({
       success: false,

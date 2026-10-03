@@ -51,13 +51,17 @@ npm install
 server: {
   port: 5173,
   proxy: {
-    '/api': { target: 'http://localhost:8080', changeOrigin: true }
+    '/api': { target: 'http://127.0.0.1:8080', changeOrigin: true }
   }
 }
 ```
 
+> 这里必须写 `127.0.0.1` 而不是 `localhost`：Windows 上 `localhost` 会优先解析成 IPv6 的
+> `::1`，而 Spring Boot 内置 Tomcat 默认只监听 IPv4 的 `0.0.0.0`，用 `localhost` 会报
+> `ECONNREFUSED`（浏览器里表现为"无法连接后端服务"）。
+
 如果不想用代理、想直接请求后端域名，把 `.env.development` 改成
-`VITE_API_BASE_URL=http://localhost:8080/api` 即可。
+`VITE_API_BASE_URL=http://127.0.0.1:8080/api` 即可。
 此时后端需要放行跨域（后端 `app.cors.allowed-origins` 已默认允许 `http://localhost:5173`）。
 
 ### 3. 启动开发服务器
