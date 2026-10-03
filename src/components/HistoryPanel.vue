@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue'
+import { toDisplayExpression } from '../utils/formatExpression'
 
 const props = defineProps({
   items: { type: Array, default: () => [] },
@@ -60,7 +61,7 @@ function onRemove(item) {
       <li v-for="item in items" :key="item.id" class="history-item">
         <span class="history-id">#{{ item.id }}</span>
         <div class="history-body">
-          <div class="history-expression">{{ item.expression }}</div>
+          <div class="history-expression">{{ toDisplayExpression(item.expression) }}</div>
           <div class="history-result">= {{ item.result }}</div>
         </div>
         <span class="history-time">{{ item.createdAt }}</span>

@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import DisplayPanel from '../components/DisplayPanel.vue'
 import HistoryPanel from '../components/HistoryPanel.vue'
 import Keypad from '../components/Keypad.vue'
@@ -7,6 +7,7 @@ import ScientificPanel from '../components/ScientificPanel.vue'
 import StatsCard from '../components/StatsCard.vue'
 import { calculate, clearHistory, deleteHistory, fetchHistory, fetchStats } from '../api/calculator'
 import { useTheme } from '../composables/useTheme'
+import { toDisplayExpression } from '../utils/formatExpression'
 
 const { theme, toggleTheme } = useTheme()
 
@@ -27,6 +28,9 @@ const angleMode = ref('DEG')
  * 等他真正开始输入下一道题时，再把这两者一起清掉。
  */
 const justCalculated = ref(false)
+
+/** 界面上展示的数学写法，例如把 sqrt(2) 显示成 √(2)、abs(-7) 显示成 |-7| */
+const displayExpression = computed(() => toDisplayExpression(expression.value))
 
 /* ---------------- 历史区状态 ---------------- */
 
@@ -266,7 +270,7 @@ onUnmounted(() => {
         <h2 class="card-title">计算</h2>
 
         <DisplayPanel
-          :expression="expression"
+          :expression="displayExpression"
           :result="result"
           :error-message="errorMessage"
           :loading="loading"
