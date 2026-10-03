@@ -31,7 +31,7 @@ const keys = [
   { label: '3', value: '3', kind: 'digit' },
   { label: '−', value: '-', kind: 'operator' },
 
-  { label: '±', value: 'SIGN', kind: 'function' },
+  { label: '%', value: '%', kind: 'function' },
   { label: '0', value: '0', kind: 'digit' },
   { label: '.', value: '.', kind: 'digit' },
   { label: '+', value: '+', kind: 'operator' }

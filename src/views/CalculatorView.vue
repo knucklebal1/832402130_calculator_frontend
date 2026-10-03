@@ -65,26 +65,27 @@ function clearExpression() {
 }
 
 /**
- * 正负号切换（±）：
- * 把末尾的数字包成 (-n)，再次点击则还原。
+ * 减号键：既做减法，也承担原来 ± 的正负号功能。
+ *
+ * <p>判断依据是当前位置"能不能直接写一个负数"：
+ * 表达式开头、运算符之后、左括号之后，减号就是正负号；
+ * 数字、右括号、百分号之后，减号是普通的减法运算符。
+ *
+ * <p>在正负号位置再按一次，可以取消刚写下的负号，等价于原来 ± 的来回切换。
  */
-function toggleSign() {
-  justCalculated.value = false
-  const current = expression.value
-  const wrapped = current.match(/\((-?)(\d+(?:\.\d+)?|\.\d+)\)$/)
-
-  if (wrapped) {
-    expression.value = current.slice(0, current.length - wrapped[0].length) + wrapped[2]
-  } else {
-    const trailing = current.match(/(\d+(?:\.\d+)?|\.\d+)$/)
-    if (trailing) {
-      const index = current.length - trailing[0].length
-      expression.value = `${current.slice(0, index)}(-${trailing[0]})`
-    } else {
-      expression.value = `${current}-`
-    }
+function appendMinus() {
+  if (justCalculated.value) {
+    expression.value = ''
+    result.value = ''
+    justCalculated.value = false
   }
-  result.value = ''
+
+  const current = expression.value
+  const isSignAtEnd =
+    current.endsWith('-') &&
+    (current.length === 1 || /[+\-*/(]$/.test(current.slice(0, -1)))
+
+  expression.value = isSignAtEnd ? current.slice(0, -1) : `${current}-`
   errorMessage.value = ''
 }
 
@@ -186,8 +187,8 @@ function handleKey(key) {
     case 'BACK':
       backspace()
       break
-    case 'SIGN':
-      toggleSign()
+    case '-':
+      appendMinus()
       break
     case '=':
       submit()
@@ -197,7 +198,8 @@ function handleKey(key) {
   }
 }
 
-const DIGIT_AND_SYMBOL = /^[0-9+\-*/().]$/
+/** 键盘上可以直接输入的字符（减号单独走 appendMinus，所以不在这里） */
+const INPUT_SYMBOL = /^[0-9+*/().%]$/
 
 function onKeydown(event) {
   const tag = event.target?.tagName
@@ -207,7 +209,10 @@ function onKeydown(event) {
   }
 
   const key = event.key
-  if (DIGIT_AND_SYMBOL.test(key)) {
+  if (key === '-') {
+    appendMinus()
+    event.preventDefault()
+  } else if (INPUT_SYMBOL.test(key)) {
     appendToken(key)
     event.preventDefault()
   } else if (key === 'Enter' || key === '=') {
