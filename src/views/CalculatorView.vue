@@ -7,7 +7,7 @@ import ScientificPanel from '../components/ScientificPanel.vue'
 import StatsCard from '../components/StatsCard.vue'
 import { calculate, clearHistory, deleteHistory, fetchHistory, fetchStats } from '../api/calculator'
 import { useTheme } from '../composables/useTheme'
-import { toDisplayExpression } from '../utils/formatExpression'
+import { ATOMIC_INPUT_TOKENS, toDisplayExpression } from '../utils/formatExpression'
 
 const { theme, toggleTheme } = useTheme()
 
@@ -60,7 +60,12 @@ function appendToken(token) {
 /** 退格属于"修改当前显示的式子"，保留表达式，只清掉上一次的结果。 */
 function backspace() {
   justCalculated.value = false
-  expression.value = expression.value.slice(0, -1)
+  // 一次删掉一整个按钮插入的内容（sqrt(、abs(、sin(、pi…），
+  // 而不是逐个字符删——否则中途会露出 sqrt、abs 这类内部代码写法
+  const atomicToken = ATOMIC_INPUT_TOKENS.find((token) => expression.value.endsWith(token))
+  expression.value = atomicToken
+    ? expression.value.slice(0, -atomicToken.length)
+    : expression.value.slice(0, -1)
   result.value = ''
   errorMessage.value = ''
 }
