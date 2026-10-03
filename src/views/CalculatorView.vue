@@ -88,7 +88,10 @@ async function submit() {
   try {
     const data = await calculate(expr)
     result.value = data.result
-    expression.value = data.expression
+    // 计算成功后清空输入框，方便直接开始下一次计算，不需要手动按 AC。
+    // 结果保留在下方显示，刚算过的表达式可以在右侧历史记录里看到。
+    // 失败时不清空，便于用户在原表达式上修改。
+    expression.value = ''
     // 计算成功后重新从后端拉取历史，保证展示的是数据库的最新状态
     await Promise.all([loadHistory(1), loadStats()])
   } catch (error) {
