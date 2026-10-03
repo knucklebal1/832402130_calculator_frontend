@@ -16,6 +16,14 @@ const result = ref('')
 const errorMessage = ref('')
 const loading = ref(false)
 
+/**
+ * 上一次计算是否刚刚完成。
+ *
+ * <p>按下 = 之后表达式和结果都留在界面上，方便用户核对；
+ * 等他真正开始输入下一道题时，再把这两者一起清掉。
+ */
+const justCalculated = ref(false)
+
 /* ---------------- 历史区状态 ---------------- */
 
 const history = ref([])
@@ -30,18 +38,27 @@ const stats = ref(null)
 
 /** 拼接按键内容。前端只做字符串处理，不做任何计算。 */
 function appendToken(token) {
+  // 上一道题的结果还留在屏幕上，此时用户开始输入下一次运算，
+  // 才把表达式和结果一起清掉，从空开始。
+  if (justCalculated.value) {
+    expression.value = ''
+    result.value = ''
+    justCalculated.value = false
+  }
   expression.value += token
-  result.value = ''
   errorMessage.value = ''
 }
 
+/** 退格属于"修改当前显示的式子"，保留表达式，只清掉上一次的结果。 */
 function backspace() {
+  justCalculated.value = false
   expression.value = expression.value.slice(0, -1)
   result.value = ''
   errorMessage.value = ''
 }
 
 function clearExpression() {
+  justCalculated.value = false
   expression.value = ''
   result.value = ''
   errorMessage.value = ''
@@ -52,6 +69,7 @@ function clearExpression() {
  * 把末尾的数字包成 (-n)，再次点击则还原。
  */
 function toggleSign() {
+  justCalculated.value = false
   const current = expression.value
   const wrapped = current.match(/\((-?)(\d+(?:\.\d+)?|\.\d+)\)$/)
 
@@ -82,16 +100,19 @@ async function submit() {
     return
   }
 
+  // 刚算完且表达式没有改动，重复按 = 直接忽略，避免产生重复的历史记录
+  if (justCalculated.value) {
+    return
+  }
+
   loading.value = true
   errorMessage.value = ''
 
   try {
     const data = await calculate(expr)
     result.value = data.result
-    // 计算成功后清空输入框，方便直接开始下一次计算，不需要手动按 AC。
-    // 结果保留在下方显示，刚算过的表达式可以在右侧历史记录里看到。
-    // 失败时不清空，便于用户在原表达式上修改。
-    expression.value = ''
+    // 计算成功后表达式和结果都保留在屏幕上，等用户开始下一次输入时再一起清掉
+    justCalculated.value = true
     // 计算成功后重新从后端拉取历史，保证展示的是数据库的最新状态
     await Promise.all([loadHistory(1), loadStats()])
   } catch (error) {
