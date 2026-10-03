@@ -153,10 +153,6 @@ button {
   color: var(--text);
 }
 
-.display-expression.is-placeholder {
-  color: var(--muted);
-}
-
 .display-result {
   margin-top: 10px;
   text-align: right;
@@ -403,13 +399,6 @@ button {
   display: flex;
   flex-direction: column;
   gap: 20px;
-}
-
-.keyboard-tip {
-  margin: 14px 2px 0;
-  font-size: 12px;
-  line-height: 1.6;
-  color: var(--muted);
 }
 
 .stats-footnote {

@@ -45,7 +45,6 @@ function onRemove(item) {
         v-model="localKeyword"
         class="input"
         type="text"
-        placeholder="按表达式搜索，例如 (1+2)"
         @keyup.enter="emitSearch"
       />
       <button class="btn" type="button" @click="emitSearch">搜索</button>
@@ -56,9 +55,7 @@ function onRemove(item) {
     </div>
 
     <div v-if="loading" class="empty-state">加载中…</div>
-    <div v-else-if="!items.length" class="empty-state">
-      暂无历史记录。计算成功后会自动写入后端数据库。
-    </div>
+    <div v-else-if="!items.length" class="empty-state">暂无历史记录</div>
     <ul v-else class="history-list">
       <li v-for="item in items" :key="item.id" class="history-item">
         <span class="history-id">#{{ item.id }}</span>

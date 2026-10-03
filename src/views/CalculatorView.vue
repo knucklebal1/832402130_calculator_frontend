@@ -235,10 +235,6 @@ onUnmounted(() => {
         />
 
         <Keypad :disabled="loading" @key="handleKey" />
-
-        <p class="keyboard-tip">
-          支持键盘操作：数字与 + − × ÷ ( ) . 直接输入，Enter 计算，Backspace 退格，Esc 清空
-        </p>
       </section>
 
       <div class="sidebar-stack">
