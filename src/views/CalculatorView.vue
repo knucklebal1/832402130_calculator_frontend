@@ -259,12 +259,7 @@ onUnmounted(() => {
 <template>
   <div class="app-shell">
     <header class="app-header">
-      <div>
-        <h1 class="app-title">前后端分离计算器</h1>
-        <p class="app-subtitle">
-          表达式校验、解析与计算全部由 Spring Boot 后端完成，计算历史持久化在 MySQL
-        </p>
-      </div>
+      <h1 class="app-title">前后端分离计算器</h1>
       <button class="theme-toggle" type="button" @click="toggleTheme">
         {{ theme === 'light' ? '🌙 深色' : '☀️ 浅色' }}
       </button>

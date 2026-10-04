@@ -60,7 +60,7 @@ button {
 .app-shell {
   max-width: 1180px;
   margin: 0 auto;
-  padding: 28px 20px 48px;
+  padding: 20px 20px 40px;
 }
 
 /* ---------------- 顶部标题栏 ---------------- */
@@ -70,19 +70,13 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 22px;
+  margin-bottom: 16px;
 }
 
 .app-title {
   margin: 0;
   font-size: 22px;
   font-weight: 700;
-}
-
-.app-subtitle {
-  margin: 4px 0 0;
-  font-size: 13px;
-  color: var(--muted);
 }
 
 .theme-toggle {
