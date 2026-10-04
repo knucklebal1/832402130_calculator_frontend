@@ -341,12 +341,6 @@ button {
   background: var(--panel-soft);
 }
 
-.history-id {
-  flex: 0 0 42px;
-  font-size: 12px;
-  color: var(--muted);
-}
-
 .history-body {
   flex: 1;
   min-width: 0;

@@ -28,7 +28,8 @@ function onClearAll() {
 }
 
 function onRemove(item) {
-  if (window.confirm(`确定删除记录 #${item.id}（${item.expression}）吗？`)) {
+  const label = `${toDisplayExpression(item.expression)} = ${item.result}`
+  if (window.confirm(`确定删除这条记录吗？\n${label}`)) {
     emit('remove', item)
   }
 }
@@ -59,7 +60,6 @@ function onRemove(item) {
     <div v-else-if="!items.length" class="empty-state">暂无历史记录</div>
     <ul v-else class="history-list">
       <li v-for="item in items" :key="item.id" class="history-item">
-        <span class="history-id">#{{ item.id }}</span>
         <div class="history-body">
           <div class="history-expression">{{ toDisplayExpression(item.expression) }}</div>
           <div class="history-result">= {{ item.result }}</div>
