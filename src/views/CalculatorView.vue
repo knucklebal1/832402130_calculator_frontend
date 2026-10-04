@@ -32,6 +32,15 @@ const justCalculated = ref(false)
 /** 界面上展示的数学写法，例如把 sqrt(2) 显示成 √(2)、abs(-7) 显示成 |-7| */
 const displayExpression = computed(() => toDisplayExpression(expression.value))
 
+/**
+ * 上一次计算结束后，按这些键会把当前结果作为下一次计算的起点，
+ * 和手机计算器一致：`5+3=` 得到 8，再按 `×` 就变成 `8×`，可以接着算。
+ *
+ * 其余的键（数字、小数点、左括号、常量、函数）表示要开始一道全新的题，
+ * 会把上一次的式子和结果一起清掉。
+ */
+const CONTINUE_FROM_RESULT = ['+', '-', '*', '/', '^', '%', '!']
+
 /* ---------------- 历史区状态 ---------------- */
 
 const history = ref([])
@@ -46,10 +55,9 @@ const stats = ref(null)
 
 /** 拼接按键内容。前端只做字符串处理，不做任何计算。 */
 function appendToken(token) {
-  // 上一道题的结果还留在屏幕上，此时用户开始输入下一次运算，
-  // 才把表达式和结果一起清掉，从空开始。
   if (justCalculated.value) {
-    expression.value = ''
+    // 手机计算器的习惯：按运算符接着上次的结果算，按数字则重新开始
+    expression.value = CONTINUE_FROM_RESULT.includes(token) ? result.value : ''
     result.value = ''
     justCalculated.value = false
   }
@@ -88,7 +96,8 @@ function clearExpression() {
  */
 function appendMinus() {
   if (justCalculated.value) {
-    expression.value = ''
+    // 减号是二元运算符，按它表示接着上次的结果继续算
+    expression.value = result.value
     result.value = ''
     justCalculated.value = false
   }
