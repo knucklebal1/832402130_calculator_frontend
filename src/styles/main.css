@@ -335,7 +335,8 @@ button {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 12px;
+  /* 左侧留白比右侧大一些：去掉 #编号之后式子贴着边框太近了 */
+  padding: 10px 14px 10px 20px;
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--panel-soft);
