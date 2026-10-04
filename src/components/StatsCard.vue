@@ -30,7 +30,9 @@ const averageLabel = computed(() => {
       </div>
       <div class="stat">
         <div class="stat-value">{{ operatorLabel }}</div>
-        <div class="stat-label">最常用运算符</div>
+        <div class="stat-label">
+          最常用运算符<span v-if="stats?.topOperatorCount"> · {{ stats.topOperatorCount }} 次</span>
+        </div>
       </div>
       <div class="stat">
         <div class="stat-value">{{ averageLabel }}</div>
