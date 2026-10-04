@@ -8,6 +8,7 @@
  *   abs(-7)   →  |-7|
  *   pi        →  π
  *   200*10%   →  200×10%
+ *   9-4       →  9−4
  *
  * 只影响显示，发送给后端的始终是原始表达式。
  */
@@ -81,6 +82,9 @@ export function toDisplayExpression(raw) {
       result += '×'
     } else if (char === '/') {
       result += '÷'
+    } else if (char === '-') {
+      // 统一用数学减号，和键盘上的「−」以及 ×、÷ 保持一致
+      result += '−'
     } else {
       result += char
     }
